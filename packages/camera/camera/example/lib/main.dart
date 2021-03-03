@@ -27,8 +27,6 @@ IconData getCameraLensIcon(CameraLensDirection direction) {
       return Icons.camera_front;
     case CameraLensDirection.external:
       return Icons.camera;
-    default:
-      throw ArgumentError('Unknown lens direction');
   }
 }
 
@@ -40,13 +38,11 @@ void logError(String code, String? message) {
   }
 }
 
-class _CameraExampleHomeState extends State<CameraExampleHome>
-    with WidgetsBindingObserver, TickerProviderStateMixin {
+class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindingObserver, TickerProviderStateMixin {
   CameraController? controller;
   XFile? imageFile;
   XFile? videoFile;
   VideoPlayerController? videoController;
-  VoidCallback? videoPlayerListener;
   bool enableAudio = true;
   double _minAvailableExposureOffset = 0.0;
   double _maxAvailableExposureOffset = 0.0;
@@ -69,7 +65,6 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   void initState() {
     super.initState();
     WidgetsBinding.instance?.addObserver(this);
-
     _flashModeControlRowAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -99,6 +94,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   @override
   void dispose() {
     WidgetsBinding.instance?.removeObserver(this);
+    controller?.dispose();
+    videoController?.dispose();
     _flashModeControlRowAnimationController.dispose();
     _exposureModeControlRowAnimationController.dispose();
     super.dispose();
@@ -120,51 +117,42 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     }
   }
 
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      appBar: AppBar(
-        title: const Text('Camera example'),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              child: Padding(
-                padding: const EdgeInsets.all(1.0),
-                child: Center(
-                  child: _cameraPreviewWidget(),
-                ),
+    return Column(
+      children: <Widget>[
+        Expanded(
+          child: Container(
+            child: Padding(
+              padding: const EdgeInsets.all(1.0),
+              child: Center(
+                child: _cameraPreviewWidget(),
               ),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                border: Border.all(
-                  color:
-                      controller != null && controller!.value.isRecordingVideo
-                          ? Colors.redAccent
-                          : Colors.grey,
-                  width: 3.0,
-                ),
+            ),
+            decoration: BoxDecoration(
+              color: Colors.black,
+              border: Border.all(
+                color: controller != null && controller!.value.isRecordingVideo
+                    ? Colors.redAccent
+                    : Colors.grey,
+                width: 3.0,
               ),
             ),
           ),
-          _captureControlRowWidget(),
-          _modeControlRowWidget(),
-          Padding(
-            padding: const EdgeInsets.all(5.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: <Widget>[
-                _cameraTogglesRowWidget(),
-                _thumbnailWidget(),
-              ],
-            ),
+        ),
+        _captureControlRowWidget(),
+        _modeControlRowWidget(),
+        Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              _cameraTogglesRowWidget(),
+              _thumbnailWidget(),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -210,10 +198,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     if (controller == null || _pointers != 2) {
       return;
     }
-
-    _currentScale = (_baseScale * details.scale)
-        .clamp(_minAvailableZoom, _maxAvailableZoom);
-
+    _currentScale = (_baseScale * details.scale).clamp(_minAvailableZoom, _maxAvailableZoom);
     await controller!.setZoomLevel(_currentScale);
   }
 
@@ -227,27 +212,26 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            localVideoController == null && imageFile == null
-                ? Container()
-                : SizedBox(
-                    child: (localVideoController == null)
-                        ? Image.file(File(imageFile!.path))
-                        : Container(
-                            child: Center(
-                              child: AspectRatio(
-                                  aspectRatio:
-                                      localVideoController.value.size != null
-                                          ? localVideoController
-                                              .value.aspectRatio
-                                          : 1.0,
-                                  child: VideoPlayer(localVideoController)),
-                            ),
-                            decoration: BoxDecoration(
-                                border: Border.all(color: Colors.pink)),
+            if (localVideoController == null && imageFile == null)
+              Container()
+            else
+              SizedBox(
+                width: 64.0,
+                height: 64.0,
+                child: localVideoController == null
+                    ? Image.file(File(imageFile!.path))
+                    : Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.pink),
+                        ),
+                        child: Center(
+                          child: AspectRatio(
+                            aspectRatio: localVideoController.value.aspectRatio,
+                            child: VideoPlayer(localVideoController)
                           ),
-                    width: 64.0,
-                    height: 64.0,
-                  ),
+                        ),
+                      ),
+              ),
           ],
         ),
       ),
@@ -381,8 +365,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     child: Text('AUTO'),
                     style: styleAuto,
                     onPressed: controller != null
-                        ? () =>
-                            onSetExposureModeButtonPressed(ExposureMode.auto)
+                        ? () => onSetExposureModeButtonPressed(ExposureMode.auto)
                         : null,
                     onLongPress: () {
                       if (controller != null) {
@@ -395,8 +378,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     child: Text('LOCKED'),
                     style: styleLocked,
                     onPressed: controller != null
-                        ? () =>
-                            onSetExposureModeButtonPressed(ExposureMode.locked)
+                        ? () => onSetExposureModeButtonPressed(ExposureMode.locked)
                         : null,
                   ),
                 ],
@@ -414,8 +396,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     min: _minAvailableExposureOffset,
                     max: _maxAvailableExposureOffset,
                     label: _currentExposureOffset.toString(),
-                    onChanged: _minAvailableExposureOffset ==
-                            _maxAvailableExposureOffset
+                    onChanged: _minAvailableExposureOffset == _maxAvailableExposureOffset
                         ? null
                         : setExposureOffset,
                   ),
@@ -574,8 +555,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
-    // ignore: deprecated_member_use
-    _scaffoldKey.currentState?.showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void onViewFinderTap(TapDownDetails details, BoxConstraints constraints) {
@@ -597,38 +577,33 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     if (controller != null) {
       await controller!.dispose();
     }
-    final CameraController cameraController = CameraController(
+    
+    final CameraController _controller = CameraController(
       cameraDescription,
       ResolutionPreset.max,
       enableAudio: enableAudio,
       imageFormatGroup: ImageFormatGroup.jpeg,
     );
-    controller = cameraController;
+    controller = _controller;
 
-    // If the controller is updated then update the UI.
-    cameraController.addListener(() {
-      if (mounted) setState(() {});
-      if (cameraController.value.hasError) {
-        showInSnackBar(
-            'Camera error ${cameraController.value.errorDescription}');
+    _controller.addListener(() {
+      if (mounted) {
+        setState(() {
+           // If the controller is updated then update the UI.
+        });
+      }
+      if (_controller.value.hasError) {
+        showInSnackBar('Camera error ${_controller.value.errorDescription}');
       }
     });
 
     try {
-      await cameraController.initialize();
+      await _controller.initialize();
       await Future.wait([
-        cameraController
-            .getMinExposureOffset()
-            .then((value) => _minAvailableExposureOffset = value),
-        cameraController
-            .getMaxExposureOffset()
-            .then((value) => _maxAvailableExposureOffset = value),
-        cameraController
-            .getMaxZoomLevel()
-            .then((value) => _maxAvailableZoom = value),
-        cameraController
-            .getMinZoomLevel()
-            .then((value) => _minAvailableZoom = value),
+        _controller.getMinExposureOffset().then((value) => _minAvailableExposureOffset = value),
+        _controller.getMaxExposureOffset().then((value) => _maxAvailableExposureOffset = value),
+        _controller.getMaxZoomLevel().then((value) => _maxAvailableZoom = value),
+        _controller.getMinZoomLevel().then((value) => _minAvailableZoom = value),
       ]);
     } on CameraException catch (e) {
       _showCameraException(e);
@@ -642,10 +617,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   void onTakePictureButtonPressed() {
     takePicture().then((XFile? file) {
       if (mounted) {
+        _disposeVideoPlayer();
         setState(() {
           imageFile = file;
-          videoController?.dispose();
-          videoController = null;
         });
         if (file != null) showInSnackBar('Picture saved to ${file.path}');
       }
@@ -697,8 +671,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
         showInSnackBar('Capture orientation unlocked');
       } else {
         await cameraController.lockCaptureOrientation();
-        showInSnackBar(
-            'Capture orientation locked to ${cameraController.value.lockedCaptureOrientation.toString().split('.').last}');
+        showInSnackBar('Capture orientation locked to ${cameraController.value.lockedCaptureOrientation.toString().split('.').last}');
       }
     }
   }
@@ -876,31 +849,50 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     }
   }
 
-  Future<void> _startVideoPlayer() async {
+  Future<void> _initVideoPlayer() async {
     if (videoFile == null) {
       return;
     }
-
-    final VideoPlayerController vController =
-        VideoPlayerController.file(File(videoFile!.path));
-    videoPlayerListener = () {
-      if (videoController != null && videoController!.value.size != null) {
-        // Refreshing the state to update video player with the correct ratio.
-        if (mounted) setState(() {});
-        videoController!.removeListener(videoPlayerListener!);
+    void videoPlayerListener() {
+      if (videoController != null) {
+        if (mounted) {
+          setState(() {
+            // Refreshing the state to update video player with the correct ratio.
+          });
+        }
+        videoController!.removeListener(videoPlayerListener);
       }
-    };
-    vController.addListener(videoPlayerListener!);
-    await vController.setLooping(true);
-    await vController.initialize();
-    await videoController?.dispose();
+    }
+    final _videoController = VideoPlayerController.file(File(videoFile!.path));
+    _videoController.addListener(videoPlayerListener);
+    await _videoController.setLooping(true);
+    await _videoController.initialize();
     if (mounted) {
       setState(() {
-        imageFile = null;
-        videoController = vController;
+        videoController = _videoController;
       });
     }
-    await vController.play();
+    await _videoController.play();
+  }
+
+  Future<void> _startVideoPlayer() async {
+    if (videoController == null) {
+      await _initVideoPlayer();
+    } else {
+      _disposeVideoPlayer(true);
+    }
+  }
+
+  void _disposeVideoPlayer([bool reinit = false]) {
+    final oldController = videoController;
+    WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      await oldController?.dispose();
+      if (reinit) await _initVideoPlayer();
+    });
+    setState(() {
+      imageFile = null;
+      videoController = null;
+    });
   }
 
   Future<XFile?> takePicture() async {
@@ -934,7 +926,12 @@ class CameraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: CameraExampleHome(),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Camera example'),
+        ),
+        body: CameraExampleHome(),
+      ),
     );
   }
 }

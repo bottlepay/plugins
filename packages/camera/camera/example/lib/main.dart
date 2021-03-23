@@ -144,11 +144,22 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         _modeControlRowWidget(),
         Padding(
           padding: const EdgeInsets.all(5.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
+          child: Stack(
             children: <Widget>[
-              _cameraTogglesRowWidget(),
-              _thumbnailWidget(),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: EdgeInsets.only(right: 90),
+                  child: _cameraTogglesRowWidget(),
+                ),
+              ),
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: _thumbnailWidget(),
+                ),
+              ),
             ],
           ),
         ),
@@ -206,34 +217,32 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   Widget _thumbnailWidget() {
     final VideoPlayerController? localVideoController = videoController;
 
-    return Expanded(
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            if (localVideoController == null && imageFile == null)
-              Container()
-            else
-              SizedBox(
-                width: 64.0,
-                height: 64.0,
-                child: localVideoController == null
-                    ? Image.file(File(imageFile!.path))
-                    : Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.pink),
-                        ),
-                        child: Center(
-                          child: AspectRatio(
-                            aspectRatio: localVideoController.value.aspectRatio,
-                            child: VideoPlayer(localVideoController)
-                          ),
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (localVideoController == null && imageFile == null)
+            Container()
+          else
+            SizedBox(
+              width: 64.0,
+              height: 64.0,
+              child: localVideoController == null
+                  ? Image.file(File(imageFile!.path))
+                  : Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.pink),
+                      ),
+                      child: Center(
+                        child: AspectRatio(
+                          aspectRatio: localVideoController.value.aspectRatio,
+                          child: VideoPlayer(localVideoController)
                         ),
                       ),
-              ),
-          ],
-        ),
+                    ),
+            ),
+        ],
       ),
     );
   }
@@ -549,7 +558,9 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
       }
     }
 
-    return Row(children: toggles);
+    return Row(
+      children: toggles,
+    );
   }
 
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();

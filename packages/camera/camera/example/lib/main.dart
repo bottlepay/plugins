@@ -143,7 +143,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
         _captureControlRowWidget(),
         _modeControlRowWidget(),
         Padding(
-          padding: const EdgeInsets.all(5.0),
+          // pad from bottom a little bit for snackbar to not overlay the ui
+          padding: const EdgeInsets.fromLTRB(5, 5, 5, 50),
           child: Stack(
             children: <Widget>[
               Align(
@@ -363,8 +364,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
           color: Colors.grey.shade50,
           child: Column(
             children: [
-              Center(
-                child: Text("Exposure Mode"),
+              const Center(
+                child: Text('Exposure Mode'),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -384,7 +385,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
                     },
                   ),
                   TextButton(
-                    child: Text('LOCKED'),
+                    child: const Text('LOCKED'),
                     style: styleLocked,
                     onPressed: controller != null
                         ? () => onSetExposureModeButtonPressed(ExposureMode.locked)
@@ -392,8 +393,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
                   ),
                 ],
               ),
-              Center(
-                child: Text("Exposure Offset"),
+              const Center(
+                child: Text('Exposure Offset'),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -438,8 +439,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
           color: Colors.grey.shade50,
           child: Column(
             children: [
-              Center(
-                child: Text("Focus Mode"),
+              const Center(
+                child: Text('Focus Mode'),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -566,6 +567,7 @@ class _CameraExampleHomeState extends State<CameraExampleHome> with WidgetsBindi
   String timestamp() => DateTime.now().millisecondsSinceEpoch.toString();
 
   void showInSnackBar(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
@@ -950,9 +952,9 @@ class CameraApp extends StatelessWidget {
 List<CameraDescription> cameras = [];
 
 Future<void> main() async {
-  // Fetch the available cameras before initializing the app.
+  WidgetsFlutterBinding.ensureInitialized();
   try {
-    WidgetsFlutterBinding.ensureInitialized();
+    // Fetch the available cameras before initializing the app.
     cameras = await availableCameras();
   } on CameraException catch (e) {
     logError(e.code, e.description);
